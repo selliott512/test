@@ -11,3 +11,5 @@ c1
 c2
 rebase c1
 rebase c2
+rebase change c1
+rebase change c2

@@ -14,6 +14,11 @@ If set to **true** then the random move is a function of the board state, so the
 
 ### Filter
 
+* Item 1
+* Item 2
+  * Item 2a
+  * Item 2b
+
 A subset of the moves may be chosen. If the filter fails to find a valid move then it reverts to randomly choosing from all possible moves. Valid filter values are:
 
 * **none**

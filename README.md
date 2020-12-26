@@ -1,4 +1,4 @@
-# random-uci.py
+# random-uci
 
 ## Overview
 
@@ -10,13 +10,14 @@ In addition to moving randomly there are UCI options that alter its behavior. Th
 
 ### Deterministic
 
-If set to true then the random move is a function of the board state, so the same move will always be made in the same situation.
+If set to **true** then the random move is a function of the board state, so the same move will always be made in the same situation.
 
 ### Filter
 
 A subset of the moves may be chosen. If the filter fails to find a valid move then it reverts to randomly choosing from all possible moves. Valid filter values are:
 
-* none
+* **none**
+** Apply no filter so that all moves are considered. This is the default.
 * first
 * last
 * mirror
@@ -39,4 +40,3 @@ random-uci.py is a UCI chess engine that requires a chess GUI that speaks the UC
 ```shell
 https://github.com/niklasf/python-chess
 ```
-

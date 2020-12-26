@@ -17,13 +17,19 @@ If set to **true** then the random move is a function of the board state, so the
 A subset of the moves may be chosen. If the filter fails to find a valid move then it reverts to randomly choosing from all possible moves. Valid filter values are:
 
 * **none**
-** Apply no filter so that all moves are considered. This is the default.
-* first
-* last
-* mirror
-* rotate
+*  Apply no filter so that all moves are considered. This is the default.
+* **first**
+*   Play the first move after sorting the move alphabetically. This may be "a2a3", for example.
+* **last**
+*   Play the last move after sorting the move alphabetically. This may be "h7h6", for example.
+* **mirror**
+*   Mirror the opponent's moves when possible.
+* **rotate**
+*   Rotate the opponent's move about the vertical axis when possible.
 
 ### Promotion
+
+
 ### Seed
 
 See the "doc" directory for license and version information.

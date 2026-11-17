@@ -1,0 +1,52 @@
+name: Attestation hello world
+
+# Ordinary branch pushes do not run this release workflow.
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RELEASE_TAG: ${{ github.ref_name }}
+    steps:
+      - name: Check out the tagged source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Require immutable releases for the release attestation
+        run: |
+          if ! gh api "repos/$GH_REPO/immutable-releases" --jq '.enabled' | grep -qx true; then
+            echo 'Enable release immutability in repository Settings > General > Releases.' >&2
+            exit 1
+          fi
+
+      - name: Build
+        run: make
+
+      - name: Attest the build output
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: out-file.txt
+          create-storage-record: false
+
+      # Attach the file before publication locks the release and generates its attestation.
+      - name: Create a draft release with the output attached
+        run: |
+          gh release create "$RELEASE_TAG" out-file.txt --draft --verify-tag \
+            --title "Attestation hello world $RELEASE_TAG" \
+            --notes 'A timestamp built with make on a GitHub-hosted runner.'
+
+      - name: Publish the immutable release
+        run: gh release edit "$RELEASE_TAG" --draft=false

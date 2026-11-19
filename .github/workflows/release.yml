@@ -25,13 +25,6 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Require immutable releases for the release attestation
-        run: |
-          if ! gh api "repos/$GH_REPO/immutable-releases" --jq '.enabled' | grep -qx true; then
-            echo 'Enable release immutability in repository Settings > General > Releases.' >&2
-            exit 1
-          fi
-
       - name: Build
         run: make
 

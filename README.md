@@ -14,7 +14,6 @@ sample CI workflow is unchanged.
 This example assumes a public GitHub repository with Actions enabled. In
 [repository settings](https://github.com/selliott512/test/settings), under
 **General > Releases**, enable **release immutability** before publishing.
-The workflow checks this setting and stops if it is not enabled.
 
 Immutable releases lock the published assets and tag. Use a new tag for each
 experiment; the same published version cannot be replaced with another build.
@@ -35,30 +34,81 @@ Use an unused tag if `v0.1.0` already exists. Watch the **Actions** tab. The
 workflow runs `make`, attests its output, attaches it to a draft release, and
 publishes the release. No Rust tools or custom secrets are needed.
 
-### Download and verify both attestations
-
-From a fresh directory, using a recent GitHub CLI:
-
-```sh
-gh release download v0.1.0 -R selliott512/test -p out-file.txt
-cat out-file.txt
-
-# Build provenance: this exact file was attested by the release workflow.
-gh attestation verify out-file.txt -R selliott512/test --deny-self-hosted-runners
-
-# Release identity: this file belongs to the immutable release and its tag.
-gh release verify v0.1.0 -R selliott512/test
-gh release verify-asset v0.1.0 out-file.txt -R selliott512/test
-```
-
-The build attestation uses `https://slsa.dev/provenance/v1`. GitHub automatically
-generates the separate `https://in-toto.io/attestation/release/v0.2` release
-attestation when the immutable release is published. Neither is embedded in
-`out-file.txt`; both identify it by its hash. A local `make` generates a new
-timestamp, which will not match the downloaded file's attestations.
-
 If a workflow fails after creating its draft release, inspect that draft before
 retrying; this minimal example does not overwrite existing releases.
 
 See [build attestations](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations)
 and [immutable releases](https://docs.github.com/en/code-security/concepts/supply-chain-security/immutable-releases).
+
+## Security
+
+Releases use two signed attestations: release identity and build provenance.
+The workflow builds on a GitHub-hosted runner, pins its actions to exact Git
+commits, and attests the resulting file. Publishing an immutable release adds
+GitHub's release attestation and locks its assets and associated tag.
+
+### Verify a downloaded release
+
+Use a recent GitHub CLI. For example, download the file from `v0.9.3` into a
+fresh directory:
+
+```sh
+gh release download v0.9.3 -R selliott512/test -p out-file.txt
+```
+
+Use the same release tag in both commands below when checking another version.
+Do not generate the file with a local `make`: its timestamp and hash will differ.
+
+**Verify release identity:**
+
+```sh
+gh release verify-asset v0.9.3 out-file.txt -R selliott512/test
+```
+
+Success establishes that:
+
+- The local file's hash matches an asset in the signed release attestation.
+- The asset belongs to release `v0.9.3` in `selliott512/test`.
+- The release attestation binds the release to an exact Git commit.
+- The release is immutable: its published assets and associated tag are
+  protected against replacement.
+
+**Verify build provenance:**
+
+```sh
+gh attestation verify out-file.txt \
+  -R selliott512/test \
+  --deny-self-hosted-runners \
+  --source-ref refs/tags/v0.9.3 \
+  --signer-workflow selliott512/test/.github/workflows/release.yml
+```
+
+Success establishes that:
+
+- The local file's hash matches a valid signed build-provenance attestation
+  (`https://slsa.dev/provenance/v1`).
+- The authenticated source repository is `selliott512/test`, with source
+  reference `refs/tags/v0.9.3`.
+- The signer is this repository's `.github/workflows/release.yml` workflow.
+- The attestation was generated on a GitHub-hosted runner, not a self-hosted one.
+- The signature and signing identity pass GitHub CLI's trust checks.
+
+Neither attestation is embedded in the downloaded file. These checks establish
+file integrity, release identity, and authenticated provenance; they do not
+prove the file is harmless or independently prove faithful execution of the
+build instructions. External tools and dependencies require their own scrutiny.
+
+### Signed commits
+
+Going forward, project commits will be GPG-signed by Steven Elliott
+(`selliott512@gmail.com`) using the RSA-3072 signing key with fingerprint:
+
+```text
+90BB 5F79 7B0E D14D 310F 90BE 39B3 786A 18C9 3DAD
+```
+
+This policy does not assert that historical commits are signed. A valid commit
+signature authenticates the commit to the signing key; it is separate from the
+GitHub-issued artifact attestations above. With the public key imported and its
+fingerprint independently confirmed, use `git verify-commit COMMIT` to check a
+particular commit's signature.

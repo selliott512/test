@@ -49,11 +49,11 @@ GitHub's release attestation and locks its assets and associated tag.
 
 ### Verify a downloaded release
 
-Use a recent GitHub CLI. For example, download the file from `v0.9.3` into a
+Use a recent GitHub CLI. For example, download the file from `v0.9.4` into a
 fresh directory:
 
 ```sh
-gh release download v0.9.3 -R selliott512/test -p out-file.txt
+gh release download v0.9.4 -R selliott512/test -p out-file.txt
 ```
 
 Use the same release tag in both commands below when checking another version.
@@ -62,13 +62,13 @@ Do not generate the file with a local `make`: its timestamp and hash will differ
 **Verify release identity:**
 
 ```sh
-gh release verify-asset v0.9.3 out-file.txt -R selliott512/test
+gh release verify-asset v0.9.4 out-file.txt -R selliott512/test
 ```
 
 Success establishes that:
 
 - The local file's hash matches an asset in the signed release attestation.
-- The asset belongs to release `v0.9.3` in `selliott512/test`.
+- The asset belongs to release `v0.9.4` in `selliott512/test`.
 - The release attestation binds the release to an exact Git commit.
 - The release is immutable: its published assets and associated tag are
   protected against replacement.
@@ -79,7 +79,7 @@ Success establishes that:
 gh attestation verify out-file.txt \
   -R selliott512/test \
   --deny-self-hosted-runners \
-  --source-ref refs/tags/v0.9.3 \
+  --source-ref refs/tags/v0.9.4 \
   --signer-workflow selliott512/test/.github/workflows/release.yml
 ```
 
@@ -88,7 +88,7 @@ Success establishes that:
 - The local file's hash matches a valid signed build-provenance attestation
   (`https://slsa.dev/provenance/v1`).
 - The authenticated source repository is `selliott512/test`, with source
-  reference `refs/tags/v0.9.3`.
+  reference `refs/tags/v0.9.4`.
 - The signer is this repository's `.github/workflows/release.yml` workflow.
 - The attestation was generated on a GitHub-hosted runner, not a self-hosted one.
 - The signature and signing identity pass GitHub CLI's trust checks.
